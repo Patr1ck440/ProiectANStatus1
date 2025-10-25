@@ -1,0 +1,14 @@
+{
+  "name": "your-project-name",
+  "private": true,
+  "version": "1.6.4",
+  "type": "module",
+  "scripts": {
+    "list": "ls -a"
+  },
+  "dependencies": {
+    "bootstrap-icons": "^1.13.1",
+    "tailwindcss": "^4.1.16"
+  },
+  "packageManager": "yarn@4.10.3"
+}
