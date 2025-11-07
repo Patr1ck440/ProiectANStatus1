@@ -26,6 +26,7 @@
     </button>
 
     <!-- Primul buton cu SVG Bootstrap -->
+     
     <button id="toggle-themee"
       @click="$emit('toggle-theme')" 
       class="bg-white text-blue-600 font-semibold px-3 py-1 rounded hover:bg-gray-200"
