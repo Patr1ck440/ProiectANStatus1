@@ -1,7 +1,7 @@
 <script setup>
-import { useAuth } from "@/stores/auth"
-import { onMounted, watch } from "vue"
+import { computed, onMounted, watch } from "vue"
 import { useRouter, useRoute } from "vue-router"
+import { useAuth } from "@/stores/auth"
 import { useSettingsStore } from "./stores/settingsStore"
 import { useUserStore } from "./stores/userStore"
 import Header from "./components/Header.vue"
@@ -20,6 +20,7 @@ const navigateToChapters = () => router.push("/capitole")
 const navigateToProfile = () => router.push("/profil")
 const navigateToSettings = () => router.push("/setari")
 
+// Font settings
 watch(
   () => settingsStore.settings.fontFamily,
   font => {
@@ -28,6 +29,7 @@ watch(
   { immediate: true }
 )
 
+// Load settings & user
 onMounted(() => {
   settingsStore.loadSettings()
 
@@ -48,13 +50,13 @@ onMounted(() => {
   userStore.updateStreak()
 })
 
-// Determină dacă Header/Footer să fie afișat
-const showHeaderFooter = route.path !== "/login"
+// Reactive display of header/footer
+const showHeaderFooter = computed(() => route.path !== "/login" && auth.isAuthenticated)
 </script>
 
 <template>
   <Header
-    v-if="auth.isAuthenticated && showHeaderFooter"
+    v-if="showHeaderFooter"
     :title="'EduBac'"
     class="bg-gray-200 p-4"
     @about="navigateToAbout"
@@ -66,10 +68,9 @@ const showHeaderFooter = route.path !== "/login"
 
   <main
     :class="[
-      'min-h-[70vh] transition-colors',
+      'min-h-[70vh] p-6 transition-colors',
       showHeaderFooter ? 'bg-white dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-900'
     ]"
-    class="p-6"
   >
     <RouterView />
   </main>

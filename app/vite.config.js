@@ -20,6 +20,7 @@ export default defineConfig({
       devOptions: {
         enabled: true
       },
+
       manifest: {
         theme_color: "#169bcb",
         icons: [

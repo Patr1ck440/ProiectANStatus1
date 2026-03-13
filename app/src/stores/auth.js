@@ -1,32 +1,27 @@
-import router from "@/router"
+// stores/auth.js (Pinia)
 import { defineStore } from "pinia"
-import axios from "axios"
 
 export const useAuth = defineStore("auth", {
   state: () => ({
-    isAuthenticated: false
+    isAuthenticated: false,
+    user: null
   }),
   actions: {
-    async checkCredentials(username, password) {
-      try {
-        const response = await axios.post("http://localhost:3000/auth/login", {
-          username,
-          password
-        })
-        if (response.data.success) {
-          this.isAuthenticated = true
-          router.push("/") // Redirect to home page after successful login
-        } else {
-          this.isAuthenticated = false
-        }
-        // eslint-disable-next-line no-unused-vars
-      } catch (error) {
-        this.isAuthenticated = false
+    login(username, password) {
+      if (this.checkCredentials(username, password)) {
+        this.isAuthenticated = true
+        this.user = { name: username } // opțional
+        return true
       }
+      return false
     },
     logout() {
       this.isAuthenticated = false
-      router.push("/login") // Redirect to login page after logout
+      this.user = null
+    },
+    checkCredentials(username, password) {
+      // logica ta de verificare
+      return username === "admin" && password === "admin"
     }
   }
 })

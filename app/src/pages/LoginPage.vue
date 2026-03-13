@@ -11,11 +11,9 @@ const password = ref("")
 const loginFailed = ref(false)
 
 const authentification = () => {
-  const success = auth.checkCredentials(username.value, password.value)
-
+  const success = auth.login(username.value, password.value) // folosește metoda login()
   if (success) {
-    auth.isAuthenticated = true // <- trebuie setat
-    router.push("/") // sau /lessons
+    router.push("/")
   } else {
     loginFailed.value = true
   }
