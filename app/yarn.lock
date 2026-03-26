@@ -1543,6 +1543,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fortawesome/fontawesome-free@npm:^7.2.0":
+  version: 7.2.0
+  resolution: "@fortawesome/fontawesome-free@npm:7.2.0"
+  checksum: 10c0/fc95989739857a2622c993929c6748c8c7eac3b490b0de6beb843b0b6a5de99f1e99c92901706c73e4da6be9413853a7382dfe82d2313c217489210a5b9965ed
+  languageName: node
+  linkType: hard
+
 "@gar/promise-retry@npm:^1.0.0":
   version: 1.0.2
   resolution: "@gar/promise-retry@npm:1.0.2"
@@ -5760,6 +5767,7 @@ __metadata:
     "@eslint/js": "npm:^9.39.2"
     "@eslint/json": "npm:^0.14.0"
     "@eslint/markdown": "npm:^7.5.1"
+    "@fortawesome/fontawesome-free": "npm:^7.2.0"
     "@tailwindcss/vite": "npm:^4.1.17"
     "@vitejs/plugin-vue": "npm:^6.0.1"
     bootstrap-icons: "npm:^1.13.1"
