@@ -50,7 +50,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:5.2.3
-    container_name: pma.taskproject
+    container_name: pma.taskproject2
     ports:
       - "8088:80"
     environment:
