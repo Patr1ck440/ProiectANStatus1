@@ -2,6 +2,7 @@
   "name": "Curs 17 - Api",
   "dockerComposeFile": "../../compose.yaml",
   "service": "api",
+  "runServices": ["mysql", "phpmyadmin"],
   "workspaceFolder": "/task",
   "mounts": [
   "source=${localEnv:USERPROFILE}/.gitconfig,target=/home/node/.gitconfig,type=bind,consistency=cached"
