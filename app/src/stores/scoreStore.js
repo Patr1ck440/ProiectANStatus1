@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { quizApi } from './apiService.js'
+import { useUserStore } from './userStore.js'
 
 export const useScoreStore = defineStore('score', () => {
   // State
@@ -27,10 +29,24 @@ export const useScoreStore = defineStore('score', () => {
       totalQuestions: 10
     }
   ])
-  
+
   const highScores = ref([])
   const userRank = ref(150)
   const totalUsers = ref(1000)
+
+  // Loading / Error
+  const loading = ref(false)
+  const error = ref(null)
+
+  // User store
+  const userStore = useUserStore()
+  const getCurrentUserId = () => {
+    try {
+      return userStore.user?.value?.id ?? userStore.user?.id ?? null
+    } catch {
+      return null
+    }
+  }
 
   // Getters
   const getAllScores = computed(() => scores.value)
@@ -56,13 +72,13 @@ export const useScoreStore = defineStore('score', () => {
   })
   const getBestScore = computed(() => {
     if (scores.value.length === 0) return null
-    return scores.value.reduce((best, current) => 
+    return scores.value.reduce((best, current) =>
       current.score > best.score ? current : best
     )
   })
   const getWorstScore = computed(() => {
     if (scores.value.length === 0) return null
-    return scores.value.reduce((worst, current) => 
+    return scores.value.reduce((worst, current) =>
       current.score < worst.score ? current : worst
     )
   })
@@ -74,7 +90,7 @@ export const useScoreStore = defineStore('score', () => {
       '60-69': 0,
       '0-59': 0
     }
-    
+
     scores.value.forEach(score => {
       if (score.score >= 90) distribution['90-100']++
       else if (score.score >= 80) distribution['80-89']++
@@ -82,32 +98,32 @@ export const useScoreStore = defineStore('score', () => {
       else if (score.score >= 60) distribution['60-69']++
       else distribution['0-59']++
     })
-    
+
     return distribution
   })
 
   // Actions
-  function addScoreFromQuiz(quizData, userAnswers, score, timeSpent) {
+  function addScoreFromQuiz(quizData, userAnswers, scoreValue, timeSpentSeconds) {
     const correctAnswers = userAnswers.filter(answer => answer.correct).length
     const totalQuestions = userAnswers.length
-    
+
     const newScore = {
       id: scores.value.length + 1,
       quizId: quizData.id,
       quizTitle: quizData.title,
-      score: score,
-      maxScore: totalQuestions * 10, // 10 puncte pe întrebare
+      score: scoreValue,
+      maxScore: totalQuestions * 10,
       date: new Date().toISOString().split('T')[0],
-      timeSpent: formatTime(timeSpent),
+      timeSpent: formatTime(timeSpentSeconds),
       correctAnswers: correctAnswers,
       totalQuestions: totalQuestions
     }
-    
+
     scores.value.push(newScore)
     updateHighScores()
     updateUserRank()
-    
-    console.log(`✅ Scor adăugat: ${score}/${newScore.maxScore}`)
+
+    console.log(`✅ Scor adăugat: ${scoreValue}/${newScore.maxScore}`)
     return newScore
   }
 
@@ -117,11 +133,11 @@ export const useScoreStore = defineStore('score', () => {
       date: new Date().toISOString().split('T')[0],
       ...scoreData
     }
-    
+
     scores.value.push(newScore)
     updateHighScores()
     updateUserRank()
-    
+
     console.log(`➕ Scor adăugat: ${scoreData.score}/${scoreData.maxScore}`)
   }
 
@@ -142,7 +158,7 @@ export const useScoreStore = defineStore('score', () => {
     highScores.value = [...scores.value]
       .sort((a, b) => b.score - a.score)
       .slice(0, 10)
-    
+
     console.log('🏆 High scores actualizate')
   }
 
@@ -183,15 +199,12 @@ export const useScoreStore = defineStore('score', () => {
 
   function exportScores() {
     const dataStr = JSON.stringify(scores.value, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
-    
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
     const exportFileDefaultName = `edubac-scores-${new Date().toISOString().split('T')[0]}.json`
-    
     const linkElement = document.createElement('a')
     linkElement.setAttribute('href', dataUri)
     linkElement.setAttribute('download', exportFileDefaultName)
     linkElement.click()
-    
     console.log('💾 Scoruri exportate')
   }
 
@@ -201,8 +214,141 @@ export const useScoreStore = defineStore('score', () => {
       scores.value = [...scores.value, ...importedScores]
       updateHighScores()
       console.log('📥 Scoruri importate cu succes')
-    } catch (error) {
-      console.error('❌ Eroare la importul scorurilor:', error)
+    } catch (err) {
+      console.error('❌ Eroare la importul scorurilor:', err)
+    }
+  }
+
+  // Backend integration
+  async function fetchScoresFromDB(userId = null) {
+    loading.value = true
+    error.value = null
+    try {
+      const uid = userId ?? getCurrentUserId()
+      if (!uid) {
+        error.value = 'User not authenticated'
+        return null
+      }
+      const attempts = await quizApi.getByUser(uid)
+      // Transform attempts into score entries compatible with store
+      const mapped = attempts.map(a => ({
+        id: a.id,
+        quizId: a.chapterId ?? null,
+        quizTitle: a.chapter?.title ?? `Capitol ${a.chapterId}`,
+        score: a.score,
+        maxScore: (a.totalQuestions ?? 0) * 10,
+        date: a.completedAt ? new Date(a.completedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        timeSpent: '00:00',
+        correctAnswers: a.correctAnswers ?? 0,
+        totalQuestions: a.totalQuestions ?? 0
+      }))
+      // Replace local scores for this user with fetched attempts
+      scores.value = mapped
+      updateHighScores()
+      updateUserRank()
+      return mapped
+    } catch (err) {
+      error.value = err.message || 'Eroare la preluarea scorurilor'
+      console.error(err)
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function submitScoreToDB({ quizId = null, scoreValue = 0, totalQuestions = 0, correctAnswers = 0, userId = null } = {}) {
+    loading.value = true
+    error.value = null
+    try {
+      const uid = userId ?? getCurrentUserId()
+      if (!uid) throw new Error('User not authenticated')
+      const payload = {
+        userId: uid,
+        chapterId: quizId,
+        score: scoreValue,
+        totalQuestions,
+        correctAnswers
+      }
+      const attempt = await quizApi.submit(payload)
+      // Update local store with returned attempt
+      const newScore = {
+        id: attempt.id ?? scores.value.length + 1,
+        quizId: attempt.chapterId ?? quizId,
+        quizTitle: attempt.chapter?.title ?? `Capitol ${attempt.chapterId ?? quizId}`,
+        score: attempt.score ?? scoreValue,
+        maxScore: (attempt.totalQuestions ?? totalQuestions) * 10,
+        date: attempt.completedAt ? new Date(attempt.completedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        timeSpent: '00:00',
+        correctAnswers: attempt.correctAnswers ?? correctAnswers,
+        totalQuestions: attempt.totalQuestions ?? totalQuestions
+      }
+      // push or replace
+      const idx = scores.value.findIndex(s => s.id === newScore.id)
+      if (idx === -1) scores.value.push(newScore)
+      else scores.value[idx] = newScore
+      updateHighScores()
+      updateUserRank()
+      return newScore
+    } catch (err) {
+      error.value = err.message || 'Eroare la trimiterea scorului'
+      console.error(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function syncScoresWithAttempts(userId = null) {
+    loading.value = true
+    error.value = null
+    try {
+      const uid = userId ?? getCurrentUserId()
+      if (!uid) throw new Error('User not authenticated')
+      const attempts = await quizApi.getByUser(uid)
+      // Merge attempts into scores without duplicating
+      attempts.forEach(a => {
+        const exists = scores.value.find(s => s.id === a.id)
+        const entry = {
+          id: a.id,
+          quizId: a.chapterId ?? null,
+          quizTitle: a.chapter?.title ?? `Capitol ${a.chapterId}`,
+          score: a.score,
+          maxScore: (a.totalQuestions ?? 0) * 10,
+          date: a.completedAt ? new Date(a.completedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          timeSpent: '00:00',
+          correctAnswers: a.correctAnswers ?? 0,
+          totalQuestions: a.totalQuestions ?? 0
+        }
+        if (!exists) scores.value.push(entry)
+        else {
+          Object.assign(exists, entry)
+        }
+      })
+      updateHighScores()
+      updateUserRank()
+      return scores.value
+    } catch (err) {
+      error.value = err.message || 'Eroare la sincronizare'
+      console.error(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function getLeaderboardFromDB() {
+    loading.value = true
+    error.value = null
+    try {
+      const board = await quizApi.getLeaderboard()
+      // board is list of users with points and level
+      return board
+    } catch (err) {
+      error.value = err.message || 'Eroare la preluarea leaderboard'
+      console.error(err)
+      return []
+    } finally {
+      loading.value = false
     }
   }
 
@@ -221,12 +367,12 @@ export const useScoreStore = defineStore('score', () => {
   function getQuizStats(quizId) {
     const quizScores = filterScoresByQuiz(quizId)
     if (quizScores.length === 0) return null
-    
+
     const totalScore = quizScores.reduce((sum, score) => sum + score.score, 0)
     const avgScore = Math.round(totalScore / quizScores.length)
     const bestScore = Math.max(...quizScores.map(s => s.score))
     const attempts = quizScores.length
-    
+
     return {
       quizId,
       attempts,
@@ -242,7 +388,9 @@ export const useScoreStore = defineStore('score', () => {
     highScores,
     userRank,
     totalUsers,
-    
+    loading,
+    error,
+
     // Getters
     getAllScores,
     getHighScores,
@@ -255,7 +403,7 @@ export const useScoreStore = defineStore('score', () => {
     getBestScore,
     getWorstScore,
     getScoreDistribution,
-    
+
     // Actions
     addScoreFromQuiz,
     addScore,
@@ -270,6 +418,12 @@ export const useScoreStore = defineStore('score', () => {
     exportScores,
     importScores,
     getLatestScore,
-    getQuizStats
+    getQuizStats,
+
+    // Backend actions
+    fetchScoresFromDB,
+    submitScoreToDB,
+    syncScoresWithAttempts,
+    getLeaderboardFromDB
   }
 })

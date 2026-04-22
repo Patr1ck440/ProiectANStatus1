@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { chapterApi } from './apiService.js'
 
 export const useChapterStore = defineStore('chapter', () => {
-  // State
+  // ─── STATE (existent, nemodificat) ───────────────────────────────────────────
   const chapters = ref([
     {
       id: 1,
@@ -64,16 +65,16 @@ export const useChapterStore = defineStore('chapter', () => {
   const currentChapter = ref(null)
   const selectedSubject = ref('all')
 
-  // Getters
+  // ─── GETTERS (existente, nemodificate) ───────────────────────────────────────
   const getAllChapters = computed(() => chapters.value)
-  const getCompletedChapters = computed(() => 
+  const getCompletedChapters = computed(() =>
     chapters.value.filter(chapter => chapter.completed)
   )
-  const getIncompleteChapters = computed(() => 
+  const getIncompleteChapters = computed(() =>
     chapters.value.filter(chapter => !chapter.completed)
   )
   const getChapterCount = computed(() => chapters.value.length)
-  const getCompletedCount = computed(() => 
+  const getCompletedCount = computed(() =>
     chapters.value.filter(chapter => chapter.completed).length
   )
   const getProgressPercentage = computed(() => {
@@ -94,7 +95,7 @@ export const useChapterStore = defineStore('chapter', () => {
     return computed(() => chapters.value.filter(ch => ch.difficulty === difficulty))
   }
 
-  // Actions
+  // ─── ACTIONS (existente, nemodificate) ───────────────────────────────────────
   function selectChapter(chapterId) {
     const chapter = chapters.value.find(ch => ch.id === chapterId)
     if (chapter) {
@@ -183,13 +184,128 @@ export const useChapterStore = defineStore('chapter', () => {
     console.log(` Capitole sortate după: ${property}`)
   }
 
+  // ─── ACȚIUNI API NOI (adăugate pentru cerințele proiectului) ─────────────────
+  const loading = ref(false)
+  const error = ref(null)
+  const dbQuestions = ref([])
+
+  // GET - capitole din DB
+  async function fetchChaptersFromDB() {
+    loading.value = true
+    error.value = null
+    try {
+      const data = await chapterApi.getAll()
+      console.log('Capitole din DB:', data)
+      return data
+    } catch (err) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // GET - întrebările unui capitol din DB
+  async function fetchQuestionsFromDB(chapterId) {
+    loading.value = true
+    try {
+      dbQuestions.value = await chapterApi.getQuestions(chapterId)
+      return dbQuestions.value
+    } catch (err) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // GET - statistici capitol din DB
+  async function fetchChapterStats(chapterId) {
+    try {
+      return await chapterApi.getStats(chapterId)
+    } catch (err) {
+      error.value = err.message
+    }
+  }
+
+  // POST - salvează capitol în DB
+  async function saveChapterToDB(data) {
+    loading.value = true
+    try {
+      const saved = await chapterApi.create(data)
+      console.log('Capitol salvat în DB:', saved)
+      return saved
+    } catch (err) {
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // POST - adaugă întrebare în DB
+  async function saveQuestionToDB(chapterId, data) {
+    loading.value = true
+    try {
+      const saved = await chapterApi.addQuestion(chapterId, data)
+      dbQuestions.value.push(saved)
+      return saved
+    } catch (err) {
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // PUT - actualizează capitol în DB
+  async function updateChapterInDB(id, data) {
+    loading.value = true
+    try {
+      const updated = await chapterApi.update(id, data)
+      console.log('Capitol actualizat în DB:', updated)
+      return updated
+    } catch (err) {
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // DELETE - șterge capitol din DB
+  async function deleteChapterFromDB(id) {
+    loading.value = true
+    try {
+      await chapterApi.delete(id)
+      console.log('Capitol șters din DB:', id)
+    } catch (err) {
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // DELETE - șterge întrebare din DB
+  async function deleteQuestionFromDB(chapterId, qId) {
+    loading.value = true
+    try {
+      await chapterApi.deleteQuestion(chapterId, qId)
+      dbQuestions.value = dbQuestions.value.filter(q => q.id !== qId)
+    } catch (err) {
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
-    // State
+    // ── State existent ──
     chapters,
     currentChapter,
     selectedSubject,
-    
-    // Getters
+
+    // ── Getters existente ──
     getAllChapters,
     getCompletedChapters,
     getIncompleteChapters,
@@ -200,8 +316,8 @@ export const useChapterStore = defineStore('chapter', () => {
     getSubjects,
     getCurrentChapter,
     getChaptersByDifficulty,
-    
-    // Actions
+
+    // ── Acțiuni existente ──
     selectChapter,
     markChapterAsCompleted,
     updateChapterProgress,
@@ -211,6 +327,19 @@ export const useChapterStore = defineStore('chapter', () => {
     filterBySubject,
     resetChapterProgress,
     resetAllProgress,
-    sortChaptersBy
+    sortChaptersBy,
+
+    // ── API nou adăugat ──
+    loading,
+    error,
+    dbQuestions,
+    fetchChaptersFromDB,
+    fetchQuestionsFromDB,
+    fetchChapterStats,
+    saveChapterToDB,
+    saveQuestionToDB,
+    updateChapterInDB,
+    deleteChapterFromDB,
+    deleteQuestionFromDB,
   }
 })

@@ -13,10 +13,8 @@ const db = {
     },
   },
 };
-export const sequelize = new Sequelize(
-  db.NAME,
-  db.USERNAME,
-  db.PASSWORD,
-
-  db.options,
-);
+export const sequelize = new Sequelize('db_name', 'db_user', 'db_pass', {
+  host: '127.0.0.1',
+  port: 3306,
+  dialect: 'mysql',
+});
