@@ -1,52 +1,49 @@
 services:
   app:
-    build: .docker/app
+    build:
+      context: ./app
+      dockerfile: ../.docker/app/Dockerfile
+    container_name: app.taskproject2
     stdin_open: true
     tty: true
-    container_name: app.taskproject2
     environment:
       NODE_ENV: development
-      CHOKIDAR_USEPOLLING: true
-      CHOKIDAR_INTERVAL: 100
+      CHOKIDAR_USEPOLLING: "true"
     ports:
       - "5173:5173"
     volumes:
-      - ./:/task
-    working_dir: /task/app
-    user: "1000:1000"
+      - ./app:/app
+      - /app/node_modules
+    working_dir: /app
 
   api:
-    build: .docker/api
+    build:
+      context: ./api
+      dockerfile: ../.docker/api/Dockerfile
+    container_name: api.taskproject2
     stdin_open: true
     tty: true
-    container_name: api.taskproject2
     environment:
       NODE_ENV: development
-      CHOKIDAR_USEPOLLING: true
-      CHOKIDAR_INTERVAL: 100
     ports:
       - "3000:3000"
     volumes:
-      - ./:/task
-    working_dir: /task/api
-    user: "1000:1000"
+      - ./api:/app
+      - /app/node_modules
+    working_dir: /app
 
   mysql:
-    build: .docker/mysql
+    image: mysql:8.4.8
     container_name: mysql.taskproject2
-    ports:
-      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: admin
       MYSQL_DATABASE: task
       MYSQL_USER: task
       MYSQL_PASSWORD: task
+    ports:
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./.docker/mysql/utf8mb4.cnf:/etc/mysql/conf.d/utf8mb4.cnf:ro
-      - ./.docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
-      - ./database:/database:rw
-    restart: always
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:5.2.3
@@ -57,9 +54,6 @@ services:
       PMA_HOST: mysql
       PMA_USER: task
       PMA_PASSWORD: task
-      UPLOAD_LIMIT: 250M
-    restart: always
 
 volumes:
   mysql_data:
-    driver: local

@@ -1,38 +1,27 @@
 import express from "express";
-import bodyParser from "body-parser";
-const api = express();
-const port = 3000;
-const router = express.Router();
-
-api.use(function (req, res, next) {
-  // Website you wish to allow to connect
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  // Request methods you wish to allow
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, OPTIONS, PUT, PATCH, DELETE",
-  );
-  // Request headers you wish to allow
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "X-Requested-With,content-type",
-  );
-  // Set to true if you need the website to include cookies in the requests sent
-  // to the API (e.g. in case you use sessions)
-  res.setHeader("Access-Control-Allow-Credentials", true);
-  // Pass to next layer of middleware
-  next();
-});
+import cors from "cors";
 
 import universityRouter from "./router/universityRouter.js";
 
-api.use(
-  "/university",
+const api = express();
+const port = 3000;
 
-  universityRouter,
-);
+// 🔥 middleware corect
+api.use(cors());
+api.use(express.json());
+api.use(express.urlencoded({ extended: true }));
 
-api.use(bodyParser.json());
-api.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+// routes
+api.use("/university", universityRouter);
+
+// start server
+api.listen(port, "0.0.0.0", () => {
+  console.log(`API running on port ${port}`);
+});
+api.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    service: "api",
+    time: new Date().toISOString(),
+  });
 });
