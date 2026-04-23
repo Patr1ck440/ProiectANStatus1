@@ -5,9 +5,9 @@ RUN corepack enable && corepack prepare yarn@4.10.3 --activate
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+COPY package.json ./
 RUN yarn install
-    
+
 COPY . .
 
 EXPOSE 5173
