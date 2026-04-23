@@ -4,22 +4,26 @@ import { DataTypes } from "sequelize";
 export const Task = sequelize.define(
   "Task",
   {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     title: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
     },
-    done: { type: DataTypes.BOOLEAN, allowNull: true },
+    done: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     favorite: {
       type: DataTypes.BOOLEAN,
-      allowNull: true,
+      defaultValue: false,
     },
   },
   {
-    sequelize,
     freezeTableName: true,
     paranoid: false,
-  },
+  }
 );

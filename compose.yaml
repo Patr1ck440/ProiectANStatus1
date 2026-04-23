@@ -1,55 +1,56 @@
 services:
-  app:
-    build:
-      context: ./app
-      dockerfile: ../.docker/app/Dockerfile
-    container_name: app.taskproject2
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./app:/app
-      - /app/node_modules
-    working_dir: /app
-    environment:
-      NODE_ENV: development
-      CHOKIDAR_USEPOLLING: "true"
-
   api:
     build:
-      context: ./api
-      dockerfile: ../.docker/api/Dockerfile
+      context: .
+      dockerfile: .docker/api/Dockerfile
     container_name: api.taskproject2
-    ports:
-      - "3000:3000"
+    working_dir: /app
     volumes:
       - ./api:/app
       - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+
+  app:
+    build:
+      context: .
+      dockerfile: .docker/app/Dockerfile
+    container_name: app.taskproject2
     working_dir: /app
-    environment:
-      NODE_ENV: development
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
 
   mysql:
-    image: mysql:8.4.8
+    image: mysql:8.0.32
     container_name: mysql.taskproject2
     environment:
-      MYSQL_ROOT_PASSWORD: admin
-      MYSQL_DATABASE: task
-      MYSQL_USER: task
-      MYSQL_PASSWORD: task
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: proiectan
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - proiectan_mysql_data:/var/lib/mysql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:5.2.3
     container_name: pma.taskproject2
-    ports:
-      - "8088:80"
     environment:
       PMA_HOST: mysql
-      PMA_USER: task
-      PMA_PASSWORD: task
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8088:80"
+    depends_on:
+      - mysql
 
 volumes:
-  mysql_data:
+  proiectan_mysql_data:
