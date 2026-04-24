@@ -10,4 +10,4 @@ router.get("/an2", (req, res) => {
   res.send(JSON.stringify({ name: "An2" }));
 });
 
-export default Router;
+export default router;

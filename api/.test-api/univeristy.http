@@ -1,0 +1,9 @@
+@mainUrl = http://localhost:3000/university
+
+###
+# hello world from university
+GET {{mainUrl}}/
+
+###
+# get an2
+GET {{mainUrl}}/an2

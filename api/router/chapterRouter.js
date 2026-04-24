@@ -1,6 +1,5 @@
-// api/router/chapterRouter.js
 import { Router } from "express";
-import { Chapter, Question } from "../../database/entities/index.js";
+import { Chapter, Question } from "../database/entities/index.js";
 
 const router = Router();
 
@@ -8,6 +7,19 @@ const router = Router();
 router.get("/", async (req, res) => {
   try {
     const chapters = await Chapter.findAll({ order: [["orderIndex", "ASC"]] });
+    res.json(chapters);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET published chapters only
+router.get("/published/list", async (req, res) => {
+  try {
+    const chapters = await Chapter.findAll({
+      where: { isPublished: true },
+      order: [["orderIndex", "ASC"]],
+    });
     res.json(chapters);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -27,19 +39,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// GET published chapters only
-router.get("/published/list", async (req, res) => {
-  try {
-    const chapters = await Chapter.findAll({
-      where: { isPublished: true },
-      order: [["orderIndex", "ASC"]],
-    });
-    res.json(chapters);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // GET questions for a chapter
 router.get("/:id/questions", async (req, res) => {
   try {
@@ -52,10 +51,10 @@ router.get("/:id/questions", async (req, res) => {
   }
 });
 
-// GET chapter attempts/stats
+// GET chapter stats
 router.get("/:id/stats", async (req, res) => {
   try {
-    const { QuizAttempt } = await import("../../database/entities/index.js");
+    const { QuizAttempt } = await import("../database/entities/index.js");
     const attempts = await QuizAttempt.findAll({
       where: { chapterId: req.params.id },
     });
@@ -63,7 +62,10 @@ router.get("/:id/stats", async (req, res) => {
       attempts.length > 0
         ? attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length
         : 0;
-    res.json({ totalAttempts: attempts.length, averageScore: avgScore.toFixed(1) });
+    res.json({
+      totalAttempts: attempts.length,
+      averageScore: avgScore.toFixed(1),
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -72,8 +74,8 @@ router.get("/:id/stats", async (req, res) => {
 // POST create chapter
 router.post("/", async (req, res) => {
   try {
-    const { title, description, orderIndex } = req.body;
-    const chapter = await Chapter.create({ title, description, orderIndex });
+    const { title, description, orderIndex, isPublished } = req.body;
+    const chapter = await Chapter.create({ title, description, orderIndex, isPublished });
     res.status(201).json(chapter);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -84,8 +86,6 @@ router.post("/", async (req, res) => {
 router.post("/:id/questions", async (req, res) => {
   try {
     const { text, correctAnswer, options, difficulty } = req.body;
-    const chapter = await Chapter.findByPk(req.params.id);
-    if (!chapter) return res.status(404).json({ error: "Chapter not found" });
     const question = await Question.create({
       text,
       correctAnswer,
@@ -99,60 +99,19 @@ router.post("/:id/questions", async (req, res) => {
   }
 });
 
-// POST publish chapter
-router.post("/:id/publish", async (req, res) => {
-  try {
-    const chapter = await Chapter.findByPk(req.params.id);
-    if (!chapter) return res.status(404).json({ error: "Chapter not found" });
-    await chapter.update({ isPublished: true });
-    res.json(chapter);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
 // PUT update chapter
 router.put("/:id", async (req, res) => {
   try {
-    const { title, description, orderIndex, isPublished } = req.body;
     const chapter = await Chapter.findByPk(req.params.id);
     if (!chapter) return res.status(404).json({ error: "Chapter not found" });
-    await chapter.update({ title, description, orderIndex, isPublished });
+    await chapter.update(req.body);
     res.json(chapter);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-// PUT update question
-router.put("/:id/questions/:qId", async (req, res) => {
-  try {
-    const { text, correctAnswer, options, difficulty } = req.body;
-    const question = await Question.findOne({
-      where: { id: req.params.qId, chapterId: req.params.id },
-    });
-    if (!question) return res.status(404).json({ error: "Question not found" });
-    await question.update({ text, correctAnswer, options, difficulty });
-    res.json(question);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// PUT reorder chapter
-router.put("/:id/reorder", async (req, res) => {
-  try {
-    const { orderIndex } = req.body;
-    const chapter = await Chapter.findByPk(req.params.id);
-    if (!chapter) return res.status(404).json({ error: "Chapter not found" });
-    await chapter.update({ orderIndex });
-    res.json(chapter);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// DELETE chapter (soft delete)
+// DELETE chapter
 router.delete("/:id", async (req, res) => {
   try {
     const chapter = await Chapter.findByPk(req.params.id);

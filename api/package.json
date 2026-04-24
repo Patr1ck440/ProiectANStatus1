@@ -1,9 +1,6 @@
 {
-  "cors": "^2.8.5",
   "name": "api",
-  "version": "1.0.0",
-  "main": "api.js",
-  "license": "MIT",
+  "packageManager": "yarn@4.9.2",
   "type": "module",
   "scripts": {
     "dev": "node api.js"
@@ -11,7 +8,7 @@
   "dependencies": {
     "body-parser": "^2.2.2",
     "cors": "^2.8.6",
-    "express": "^4.18.2",
+    "express": "^5.2.1",
     "mysql2": "^3.20.0",
     "sequelize": "^6.37.8"
   }

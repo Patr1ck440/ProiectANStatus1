@@ -4,6 +4,8 @@ import { useRouter, useRoute } from "vue-router"
 import { useAuth } from "@/stores/auth"
 import { useSettingsStore } from "./stores/settingsStore"
 import { useUserStore } from "./stores/userStore"
+import { useChapterStore } from "./stores/chapterStore"
+import { useQuizStore } from "./stores/quizStore"
 import Header from "./components/Header.vue"
 import Footer from "./components/Footer.vue"
 
@@ -12,6 +14,8 @@ const router = useRouter()
 const route = useRoute()
 const settingsStore = useSettingsStore()
 const userStore = useUserStore()
+const chapterStore = useChapterStore()
+const quizStore = useQuizStore()
 
 // Navigare
 const navigateToAbout = () => router.push("/despre")
@@ -30,7 +34,7 @@ watch(
 )
 
 // Load settings & user
-onMounted(() => {
+onMounted(async () => {
   settingsStore.loadSettings()
 
   if (!auth.isAuthenticated && route.path !== "/login") {
@@ -48,6 +52,14 @@ onMounted(() => {
   }
 
   userStore.updateStreak()
+
+  try {
+    await chapterStore.fetchChaptersFromDB()
+    await quizStore.fetchQuizzesFromDB()
+    console.log("Date încărcate din DB ✅")
+  } catch (err) {
+    console.error("Eroare la încărcarea datelor din DB:", err)
+  }
 })
 
 // Reactive display of header/footer
@@ -76,4 +88,4 @@ const showHeaderFooter = computed(() => route.path !== "/login" && auth.isAuthen
   </main>
 
   <Footer class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200" />
- </template>
+</template>

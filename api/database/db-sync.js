@@ -1,14 +1,9 @@
-/*import { sequelize } from "./db.js";
+import { sequelize } from "./db.js";
 
-sequelize.sync({ force: true }).then(() => {
-  console.log("FINISHED SUCCESS");
-  process.exit(0);
-});
-*/
-import { Task } from "./entities/task.model.js";
-import { User } from "./entities/user.model.js";
+// Import din index.js ca să se înregistreze și asocierile
+import "./entities/index.js";
 
-Task.sync({ force: true }).then(() => {
+await sequelize.sync({ alter: true }).then(() => {
   console.log("FINISHED SUCCESS");
   process.exit(0);
 });

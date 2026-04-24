@@ -5,8 +5,8 @@
   "service": "app",
   "workspaceFolder": "/task",
   "mounts": [
-  "source=${localEnv:USERPROFILE}/.gitconfig,target=/home/node/.gitconfig,type=bind,consistency=cached"
-],
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/node/.gitconfig,type=bind,consistency=cached"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [

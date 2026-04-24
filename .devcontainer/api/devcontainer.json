@@ -1,18 +1,20 @@
 {
   "name": "Curs 17 - Api",
+  "remoteUser": "node",
   "dockerComposeFile": "../../compose.yaml",
   "service": "api",
   "runServices": ["mysql", "phpmyadmin"],
   "workspaceFolder": "/task",
   "mounts": [
-  "source=${localEnv:USERPROFILE}/.gitconfig,target=/home/node/.gitconfig,type=bind,consistency=cached"
-],
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/node/.gitconfig,type=bind,consistency=cached"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
         "dbaeumer.vscode-eslint",
         "arcanis.vscode-zipfs",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "humao.rest-client"
       ],
       "settings": {
         "editor.formatOnSave": true,

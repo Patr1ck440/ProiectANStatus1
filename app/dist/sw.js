@@ -67,7 +67,7 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-5a5d9309'], (function (workbox) { 'use strict';
+define(['./workbox-7f60d0f7'], (function (workbox) { 'use strict';
 
   self.skipWaiting();
   workbox.clientsClaim();
@@ -79,14 +79,24 @@ define(['./workbox-5a5d9309'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "registerSW.js",
-    "revision": "3ca0b8505b4bec776b69afdba2768812"
+    "revision": "402b66900e731ca748771b6fc5e7a068"
   }, {
     "url": "index.html",
-    "revision": "0.f1jqa38imm"
+    "revision": "6cc0bc884da75b77ff4c86b3247f4c12"
+  }, {
+    "url": "assets/index-B4hYadOt.css",
+    "revision": null
+  }, {
+    "url": "assets/index-9jjrAttC.js",
+    "revision": null
+  }, {
+    "url": "icons/android-chrome-192x192.png",
+    "revision": "49a231542994a4cb9f19f6f5ebc43463"
+  }, {
+    "url": "manifest.webmanifest",
+    "revision": "ec5244d3fe32bb174ba7896f7023c77e"
   }], {});
   workbox.cleanupOutdatedCaches();
-  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
-    allowlist: [/^\/$/]
-  }));
+  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html")));
 
 }));

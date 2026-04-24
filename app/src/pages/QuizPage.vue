@@ -1,3 +1,5 @@
+
+
 <template>
   <div class="main-area">
     <AlertBox v-if="alertMessage" :message="alertMessage" :type="alertType" />
@@ -63,7 +65,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useQuizStore } from '../stores/quizStore'
+
 
 // componente
 import AlertBox from '@/components/AlertBox.vue'
@@ -78,8 +80,11 @@ import ChapterControls from '@/components/ChapterControls.vue'
 import IncorrectAnswers from '@/components/IncorrectAnswers.vue'
 import ScoreBoard from '@/components/ScoreBoard.vue'
 
-// 🔥 PINIA STORE
+import { useQuizStore } from '../stores/quizStore'
+import { useUserStore } from '../stores/userStore'  // ← adaugă asta
+
 const quizStore = useQuizStore()
+const userStore = useUserStore()  // ← adaugă asta
 
 // Local state
 const isDark = ref(false)
@@ -102,7 +107,7 @@ const totalQuestions = computed(() =>
 const chapterStarted = computed(() => quizStore.quizStarted)
 const chapterFinished = computed(() => quizStore.quizCompleted)
 
-const userAnswers = computed(() => quizStore.userAnswers)
+
 const incorrectAnswers = computed(() =>
   quizStore.userAnswers.filter(a => !a.correct)
 )

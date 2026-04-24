@@ -17,8 +17,8 @@ export default defineConfig({
     vueDevTools(),
     VitePWA({
       registerType: "autoUpdate",
-      devOptions: {
-        enabled: true
+     devOptions: {
+       enabled: true
       },
 
       manifest: {

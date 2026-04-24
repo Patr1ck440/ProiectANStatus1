@@ -1,12 +1,9 @@
-FROM node:22-alpine
+FROM node:22.20.0-alpine3.22
 
-WORKDIR /app
+RUN apk add --no-cache git
+RUN corepack enable yarn
 
-COPY package.json ./
-RUN npm install
-
-COPY . .
-
-EXPOSE 3000
+WORKDIR /task/api
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
 CMD ["node", "api.js"]
