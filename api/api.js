@@ -1,3 +1,4 @@
+import "dotenv/config.js";
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -8,15 +9,16 @@ import chapterRouter from "./router/chapterRouter.js";
 import quizRouter from "./router/quizRouter.js";
 import universityRouter from "./router/universityRouter.js";
 import userRouter from "./router/userRouter.js";
+import authMiddleware from "./router/authMiddleware.js";
 
 const api = express();
 const port = 3000;
 
-// CORS - înlocuiește tot middleware-ul manual cu asta:
 api.use(cors({
   origin: "http://localhost:5173",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 }));
 
 api.use(bodyParser.json());
@@ -33,3 +35,4 @@ api.use("/api/users", userRouter);
 api.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+

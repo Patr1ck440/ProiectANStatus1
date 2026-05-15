@@ -1,21 +1,19 @@
 <script setup>
-import { ref } from "vue"
+import { ref } from 'vue'
 import { useRouter } from "vue-router"
-import { useAuth } from "@/stores/auth"
+import { useAuth } from '../stores/auth'
 
 const auth = useAuth()
 const router = useRouter()
-
 const username = ref("")
 const password = ref("")
-const loginFailed = ref(false)
+const message = ref("")
 
-const authentification = () => {
-  const success = auth.login(username.value, password.value) // folosește metoda login()
-  if (success) {
+const authentification = async () => {
+  const isAuth = await auth.checkCredentials(username.value, password.value)
+  message.value = isAuth
+  if (!isAuth) {
     router.push("/")
-  } else {
-    loginFailed.value = true
   }
 }
 </script>
@@ -37,7 +35,7 @@ const authentification = () => {
         <button class="w-full rounded bg-blue-500 py-2 text-white">Login</button>
       </form>
 
-      <p v-if="loginFailed" class="mt-4 text-red-500">Invalid username or password</p>
+      <p v-if="message" class="mt-4 text-red-500">{{ message }}</p>
     </div>
   </div>
 </template>

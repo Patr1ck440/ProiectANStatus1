@@ -1,27 +1,50 @@
-// stores/auth.js (Pinia)
 import { defineStore } from "pinia"
+import axios from "axios"
 
 export const useAuth = defineStore("auth", {
   state: () => ({
-    isAuthenticated: false,
-    user: null
+    token: localStorage.getItem("token") || null,
+    isAuthenticated: !!localStorage.getItem("token"),
   }),
+
   actions: {
-    login(username, password) {
-      if (this.checkCredentials(username, password)) {
-        this.isAuthenticated = true
-        this.user = { name: username } // opțional
-        return true
+    async checkCredentials(username, password) {
+      try {
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+          username,
+          password,
+        })
+
+        if (response.data?.success && response.data?.token) {
+          this.token = response.data.token
+          this.isAuthenticated = true
+
+          localStorage.setItem("token", response.data.token)
+
+          return ""
+        }
+
+        this.clearAuth()
+
+        return response.data?.message || "Autentificare eșuată."
+      } catch (error) {
+        console.error("Login error:", error)
+
+        this.clearAuth()
+
+        return "A apărut o eroare. Încearcă din nou."
       }
-      return false
     },
+
     logout() {
-      this.isAuthenticated = false
-      this.user = null
+      this.clearAuth()
     },
-    checkCredentials(username, password) {
-      // logica ta de verificare
-      return username === "admin" && password === "admin"
-    }
-  }
+
+    clearAuth() {
+      this.token = null
+      this.isAuthenticated = false
+
+      localStorage.removeItem("token")
+    },
+  },
 })
