@@ -1,25 +1,32 @@
 import { defineStore } from "pinia"
-import axios from "axios"
+import { api } from "../utils/api"
+import { useSocket } from "./socket"
 
 export const useAuth = defineStore("auth", {
   state: () => ({
     token: localStorage.getItem("token") || null,
+    refreshToken: localStorage.getItem("refreshToken") || null,
     isAuthenticated: !!localStorage.getItem("token"),
   }),
 
   actions: {
     async checkCredentials(username, password) {
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+        const response = await api.post("/api/auth/login", {
           username,
           password,
         })
 
-        if (response.data?.success && response.data?.token) {
-          this.token = response.data.token
+        if (response.data?.success && response.data?.accessToken) {
+          this.token = response.data.accessToken
+          this.refreshToken = response.data.refreshToken
           this.isAuthenticated = true
 
-          localStorage.setItem("token", response.data.token)
+          localStorage.setItem("token", response.data.accessToken)
+          localStorage.setItem("refreshToken", response.data.refreshToken)
+
+          const socket = useSocket()
+          socket.connect()
 
           return ""
         }
@@ -37,14 +44,18 @@ export const useAuth = defineStore("auth", {
     },
 
     logout() {
+      const socket = useSocket()
+      socket.disconnect()
       this.clearAuth()
     },
 
     clearAuth() {
       this.token = null
+      this.refreshToken = null
       this.isAuthenticated = false
 
       localStorage.removeItem("token")
+      localStorage.removeItem("refreshToken")
     },
   },
 })
